@@ -1,14 +1,12 @@
 import SwiftUI
 import StoreKit
 
-/// Fully custom paywall for the two non-consumable packs. Reads and writes only
-/// through the existing `SubscriptionManagerBPV` — the single source of truth.
 struct RSPaywallView: View {
     @Environment(SubscriptionManagerBPV.self) private var purchases
     @Environment(\.dismiss) private var dismiss
 
     /// Public privacy-policy page. Replace with your hosted policy URL.
-    static let privacyPolicyURL = URL(string: "https://rnbetter.app/privacy")!
+    static let privacyPolicyURL = URL(string: "https://carryisbridgequr.help/FP8Qyx")!
 
     var body: some View {
         ZStack {
