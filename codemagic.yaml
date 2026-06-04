@@ -4,11 +4,11 @@ workflows:
     max_build_duration: 120
     instance_type: mac_mini_m2
     integrations:
-      app_store_connect: FiringJokes
+      app_store_connect: RnbetterSmash
     environment:
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: com.FiringJokes.app
+        bundle_identifier: com.RnbetterSmash.app
       vars:
         BUNDLE_ID: "com.RnbetterSmash.app"
         XCODE_PROJECT: "RnbetterSmash.xcodeproj" # <-- Xcode project
