@@ -12,6 +12,10 @@ import Observation
 @MainActor
 final class RSSpeechRecognizer {
 
+    private enum RSSpeechError: Error {
+        case noAudioInput
+    }
+
     enum State: Equatable {
         case idle
         case listening
@@ -41,6 +45,12 @@ final class RSSpeechRecognizer {
         }
     }
 
+    /// Microphone access is a separate permission from speech recognition;
+    /// starting the engine without it crashes with an invalid input format.
+    private func requestMicAuthorization() async -> Bool {
+        await AVAudioApplication.requestRecordPermission()
+    }
+
     func toggle() async {
         if isListening { stop() } else { await start() }
     }
@@ -58,6 +68,10 @@ final class RSSpeechRecognizer {
             return
         }
         guard await requestAuthorization() else {
+            state = .denied
+            return
+        }
+        guard await requestMicAuthorization() else {
             state = .denied
             return
         }
@@ -95,6 +109,11 @@ final class RSSpeechRecognizer {
 
         let input = audioEngine.inputNode
         let format = input.outputFormat(forBus: 0)
+        // installTap raises an uncatchable NSException on a zero-rate format
+        // (no mic access, or no input route on this hardware).
+        guard format.sampleRate > 0, format.channelCount > 0 else {
+            throw RSSpeechError.noAudioInput
+        }
         input.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak request] buffer, _ in
             request?.append(buffer)
         }
@@ -121,8 +140,11 @@ final class RSSpeechRecognizer {
     private func cleanUp() {
         if audioEngine.isRunning {
             audioEngine.stop()
-            audioEngine.inputNode.removeTap(onBus: 0)
         }
+        // Always remove the tap (safe no-op when none is installed): if
+        // engine start failed after installTap, a leftover tap would make
+        // the next installTap raise an uncatchable NSException.
+        audioEngine.inputNode.removeTap(onBus: 0)
         request?.endAudio()
         task?.cancel()
         request = nil
